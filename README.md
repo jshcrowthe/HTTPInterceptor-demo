@@ -14,3 +14,5 @@ You can then get started by doing:
 ```bash
 npm start
 ```
+
+It will be available at http://localhost:5000
