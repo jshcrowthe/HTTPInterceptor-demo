@@ -3,6 +3,7 @@ angular
 .factory('retryInterceptor', function($q, $injector) {
   return {
     responseError: function(rejection) {
+      if (rejection.status !== 503) return $q.reject(rejection);
       if (rejection.config.retry) {
         rejection.config.retry++;
       } else {
