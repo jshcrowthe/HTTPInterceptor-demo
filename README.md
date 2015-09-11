@@ -15,4 +15,4 @@ You can then get started by doing:
 npm start
 ```
 
-It will be available at [http://localhost:5000](http://localhost:5000)
+It will be available at [http://localhost:3000](http://localhost:3000)
