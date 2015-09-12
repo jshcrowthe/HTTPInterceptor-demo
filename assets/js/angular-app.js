@@ -1,23 +1,65 @@
+var log = function(status, config, endTime) {
+  return config.method.toUpperCase() + ' ' +
+                      config.url + ' ' + (config.retry ? '(Retry: ' + config.retry +') ': '') +
+                      status + ' ' + 
+                      (endTime-config.startTime) + 'ms' ;
+};
+
 angular
 .module('app', [])
 .factory('retryInterceptor', function($q, $injector) {
   return {
-    responseError: function(rejection) {
-      if (rejection.status !== 503) return $q.reject(rejection);
-      if (rejection.config.retry) {
-        rejection.config.retry++;
+    responseError: function(res) {
+      if (res.status !== 503) return $q.reject(res);
+      if (res.config.retry) {
+        res.config.retry++;
       } else {
-        rejection.config.retry = 1;
+        res.config.retry = 1;
       }
 
-      if (rejection.config.retry < 5) {
-        return $injector.get('$http')(rejection.config);
-      } else {
-        return $q.reject(rejection);
+      if (res.config.retry < 10) {
+        return $injector.get('$http')(res.config);
       }
+      return $q.reject(res);
     }
   };
 })
+.service('requestLoggerService', function() {
+  this.requestLogs = [];
+})
+.directive('requestLogger', ['requestLoggerService', function(service) {
+  return {
+    restrict: 'E',
+    scope: {},
+    link: function(scope) {
+      scope.hasLogs = function() {
+        return !service.requestLogs.length;
+      };
+      scope.getRequestLog = function() {
+        return service.requestLogs;
+      };
+    },
+    template: '<div class="request-box alert alert-info" ng-hide="hasLogs()"><ul><li ng-repeat="log in getRequestLog() track by $index">{{log}}</li></ul></div>'
+  };
+}])
+.factory('loggingInterceptor', ['$q', 'requestLoggerService', function($q, logService) {
+  return {
+    request : function(config) {
+      config.startTime = new Date().getTime();
+      return config;
+    },
+    response: function(res) {
+      var end = new Date().getTime();
+      logService.requestLogs.unshift(log(res.status, res.config, end));
+      return res;
+    },
+    responseError: function(res) {
+      var end = new Date().getTime();
+      logService.requestLogs.unshift(log(res.status, res.config, end));
+      return $q.reject(res);
+    }
+  };
+}])
 .factory('authInterceptor', function() {
   return {
     request : function(config) {
@@ -29,6 +71,7 @@ angular
 .config(function($httpProvider) {
   $httpProvider.interceptors.push('authInterceptor');
   $httpProvider.interceptors.push('retryInterceptor');
+  $httpProvider.interceptors.push('loggingInterceptor');
 })
 .controller('ctrl', function($scope, $http, $q) {
   $scope.reset = function() {
