@@ -6,6 +6,7 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
 var apiRoutes = require('./routes/api');
+var login = require('./routes/login');
 var routes = require('./routes/index');
 
 var app = express();
@@ -18,13 +19,23 @@ app.engine('html', require('ejs').renderFile);
 // uncomment after placing your favicon in /public
 //app.use(favicon(__dirname + '/public/favicon.ico'));
 app.use(logger('dev'));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'assets')));
 
-app.use('/api', apiRoutes);
 app.use('/', routes);
+app.use('/login', login);
+
+app.use(function(req, res, next) {
+  var authTime = parseInt(req.headers.authorization);
+  if (isNaN(authTime) || new Date().getTime() - authTime > 5000) return res.status(401).send({
+    message: 'Request is unauthorized please login'
+  });
+  return next();
+});
+app.use('/api', apiRoutes);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
