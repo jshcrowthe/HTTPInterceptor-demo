@@ -7,25 +7,22 @@ var log = function(status, config, endTime) {
 
 angular
 .module('app', [])
-.factory('retryInterceptor', function($q, $injector) {
+.factory('retryInterceptor', ['$q', '$injector', function($q, $injector) {
   return {
     responseError: function(res) {
       if (res.status !== 503) return $q.reject(res);
-      if (res.config.retry) {
-        res.config.retry++;
-      } else {
-        res.config.retry = 1;
-      }
-
-      if (res.config.retry < 10) {
+      if (!res.config.retry || res.config.retry < 3) {
+        res.config.retry = res.config.retry ? (res.config.retry + 1) : 1;
+        // Manually inject $http (if we try to do it above
+        // angular will throw a circular dependency error)
         return $injector.get('$http')(res.config);
-      }
+      } 
       return $q.reject(res);
     }
   };
-})
+}])
 .service('requestLoggerService', function() {
-  this.requestLogs = [];
+  this.requests = [];
 })
 .directive('requestLogger', ['requestLoggerService', function(service) {
   return {
@@ -33,29 +30,35 @@ angular
     scope: {},
     link: function(scope) {
       scope.hasLogs = function() {
-        return !service.requestLogs.length;
+        return !service.requests.length;
       };
       scope.getRequestLog = function() {
-        return service.requestLogs;
+        return service.requests;
       };
     },
     template: '<div class="request-box alert alert-info" ng-hide="hasLogs()"><ul><li ng-repeat="log in getRequestLog() track by $index">{{log}}</li></ul></div>'
   };
 }])
-.factory('loggingInterceptor', ['$q', 'requestLoggerService', function($q, logService) {
+.factory('loggingInterceptor', ['$q', 'requestLoggerService', function($q, service) {
   return {
-    request : function(config) {
+    request: function(config) {
       config.startTime = new Date().getTime();
       return config;
     },
     response: function(res) {
-      var end = new Date().getTime();
-      logService.requestLogs.unshift(log(res.status, res.config, end));
+      var endTime = new Date().getTime();
+      service.requests.push(res.config.method.toUpperCase() + ' ' 
+                            + res.status + ' '
+                            + res.config.url + ' '
+                            + '- ' + (endTime - res.config.startTime) + 'ms');
       return res;
     },
     responseError: function(res) {
-      var end = new Date().getTime();
-      logService.requestLogs.unshift(log(res.status, res.config, end));
+      var endTime = new Date().getTime();
+      service.requests.push(res.config.method.toUpperCase() + ' ' 
+                            + res.status + ' '
+                            + res.config.url + ' '
+                            + '- ' + (endTime - res.config.startTime) + 'ms');
       return $q.reject(res);
     }
   };
