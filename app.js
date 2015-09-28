@@ -27,15 +27,17 @@ app.use(express.static(path.join(__dirname, 'assets')));
 
 app.use('/', routes);
 app.use('/login', login);
+app.use('/open_api', apiRoutes);
 
-app.use(function(req, res, next) {
+app.use('/secure_api', function(req, res, next) {
   var authTime = parseInt(req.headers.authorization);
   if (isNaN(authTime) || new Date().getTime() - authTime > 5000) return res.status(401).send({
     message: 'Request is unauthorized please login'
   });
   return next();
 });
-app.use('/api', apiRoutes);
+
+app.use('/secure_api', apiRoutes);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

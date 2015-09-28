@@ -20,6 +20,13 @@
   <div class="container">
     <div class="row">
       <h1>$http Demo</h1>
+      <p>
+      <strong>Secure Mode: </strong>
+      <span>On </span>
+      <input type="radio" name="secureToggle" ng-value="true" ng-model="secure">
+      <span>Off </span>
+      <input type="radio" name="secureToggle" ng-value="false" ng-model="secure" checked>
+      </p>
       <button class="btn btn-default" ng-click="makeValidRequest()">Reliable Request</button>
       <button class="btn btn-default" ng-click="makeBadRequest()">Unreliable Request</button>
       <button class="btn btn-default" ng-click="login()">Login</button>
