@@ -17,16 +17,9 @@ angular.module('requestLoggerModule', [])
     template: '<div class="request-box alert alert-info" ng-hide="hasLogs()"><ul><li ng-repeat="log in getRequestLog() track by $index">{{log}}</li></ul></div>'
   };
 }])
-.factory('loggingInterceptor', ['$q', function($q) {
+.factory('loggingInterceptor', [function() {
   return {
-    response: function(res) {
-      console.log('code=' + res.status);
-      return res;
-    },
-    responseError: function(res) {
-      console.log('code=' + res.status);
-      return $q.reject(res);
-    }
+    // Logging Interceptor
   }
 }])
 .config(['$httpProvider', function($httpProvider) {
