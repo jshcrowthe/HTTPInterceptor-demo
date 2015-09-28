@@ -26,7 +26,7 @@ angular
 
   $scope.makeBadRequest = function() {
     $scope.reset();
-    var mountPoint = $scope.secure ? '/secure_api/' : '/open_api/';
+    var mountPoint = $scope.secure ? '/secure_api' : '/open_api';
     $http({
       method: 'GET',
       url: mountPoint + '/unreliable'
