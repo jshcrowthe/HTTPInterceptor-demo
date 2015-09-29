@@ -16,12 +16,11 @@ angular
       method: 'GET',
       url: mountPoint + '/reliable'
     })
-    .success(function(data) {
+    .then(function(data) {
       $scope.response = data;
+    }, function(err) {
+      $scope.error = err.data;
     })
-    .error(function(err) {
-      $scope.error = err;
-    });
   };
 
   $scope.makeBadRequest = function() {
@@ -31,11 +30,10 @@ angular
       method: 'GET',
       url: mountPoint + '/unreliable'
     })
-    .success(function(data) {
+    .then(function(data) {
       $scope.response = data;
-    })
-    .error(function(err) {
-      $scope.error = err;
+    }, function(err) {
+      $scope.error = err.data;
     });
   };
 
