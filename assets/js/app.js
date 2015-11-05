@@ -1,6 +1,36 @@
 angular
 .module('app', ['retryModule', 'requestLoggerModule', 'authModule'])
-.controller('ctrl', ['$scope', '$http', '$q', 'authService', function($scope, $http, $q, $auth) {
+.factory('timeoutHandler', ['$q', function($q) {
+  return {
+    requestError: function(err) {
+      console.log(err);
+      return $q.reject(err);
+    },
+    responseError: function(res) {
+      console.log(res);
+      return $q.reject(res);
+    }
+  }
+}])
+.config(['$httpProvider', function($httpProvider) {
+  $httpProvider.interceptors.push('timeoutHandler');
+}])
+.service('apiService', ['$http', function($http) {
+  this.reliableRequest = function(mountPoint) {
+    return $http({
+      method: 'GET',
+      url: mountPoint + '/reliable',
+    });
+  }
+
+  this.unreliableRequest = function(mountPoint) {
+    return $http({
+      method: 'GET',
+      url: mountPoint + '/unreliable'
+    });
+  }
+}])
+.controller('ctrl', ['$scope', 'authService', 'apiService',  function($scope, $auth, $api) {
   $scope.secure = false;
   $scope.reset = function() {
     $scope.response = null;
@@ -12,10 +42,7 @@ angular
   $scope.makeValidRequest = function() {
     $scope.reset();
     var mountPoint = $scope.secure ? '/secure_api' : '/open_api';
-    $http({
-      method: 'GET',
-      url: mountPoint + '/reliable'
-    })
+    $api.reliableRequest(mountPoint)
     .then(function(data) {
       $scope.response = data;
     }, function(err) {
@@ -26,10 +53,7 @@ angular
   $scope.makeBadRequest = function() {
     $scope.reset();
     var mountPoint = $scope.secure ? '/secure_api' : '/open_api';
-    $http({
-      method: 'GET',
-      url: mountPoint + '/unreliable'
-    })
+    $api.unreliableRequest(mountPoint)
     .then(function(data) {
       $scope.response = data;
     }, function(err) {

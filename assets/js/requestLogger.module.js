@@ -17,11 +17,41 @@ angular.module('requestLoggerModule', [])
     template: '<div class="request-box alert alert-info" ng-hide="hasLogs()"><ul><li ng-repeat="log in getRequestLog() track by $index">{{log}}</li></ul></div>'
   };
 }])
-.factory('loggingInterceptor', [function() {
+.factory('loggingInterceptor', ['$q', 'requestLoggerService', function($q, service) {
   return {
-    // Logging Interceptor
-  }
+    request: function(config) {
+      config.startTime = new Date().getTime();
+      return config;
+    },
+    response: function(res) {
+      var endTime = new Date().getTime();
+      service.requests.unshift(res.config.method.toUpperCase() + ' ' 
+                            + res.status + ' '
+                            + res.config.url + ' '
+                            + '- ' + (endTime - res.config.startTime) + 'ms');
+      return res;
+    },
+    responseError: function(res) {
+      var endTime = new Date().getTime();
+      service.requests.unshift(res.config.method.toUpperCase() + ' ' 
+                            + res.status + ' '
+                            + res.config.url + ' '
+                            + '- ' + (endTime - res.config.startTime) + 'ms');
+      return $q.reject(res);
+    }
+  };
 }])
 .config(['$httpProvider', function($httpProvider) {
   $httpProvider.interceptors.push('loggingInterceptor');
 }])
+
+
+
+
+
+
+
+
+
+
+

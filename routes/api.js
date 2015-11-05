@@ -18,10 +18,11 @@ router.get('/unreliable', function(req, res, next) {
   counter++;
   if (counter % 6 === 0) return res.send(faker.helpers.createCard());
   setTimeout(function() {
+    console.log('Unreliable Request');
     return res.status(503).send({
       message: 'API is unreliable and didn\'t return this time around'
     });
-  }, 250);
+  }, 50);
 });
 
 module.exports = router;

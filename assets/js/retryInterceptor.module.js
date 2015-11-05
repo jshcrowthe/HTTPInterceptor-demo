@@ -1,7 +1,16 @@
 angular.module('retryModule', [])
-.factory('retryInterceptor', [function() {
+.factory('retryInterceptor', ['$q', '$injector', function($q, $injector) {
   return {
-    // Retry Interceptor!
+    responseError: function(res) {
+      if (res.status !== 503) return $q.reject(res);
+      if (res.config.retry) {
+        res.config.retry++;
+      } else {
+        res.config.retry = 1;
+      }
+      if (res.config.retry > 9) return $q.reject(res);
+      return $injector.get('$http')(res.config);
+    }
   }
 }])
 .config(['$httpProvider', function($httpProvider) {
