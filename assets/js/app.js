@@ -1,5 +1,5 @@
 angular
-.module('app', ['retryModule', 'requestLoggerModule', 'authModule'])
+.module('app', ['authModule', 'retryModule', 'requestLoggerModule'])
 .factory('timeoutHandler', ['$q', function($q) {
   return {
     requestError: function(err) {
